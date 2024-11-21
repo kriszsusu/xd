@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20241107</title>
+    <meta name="description" content="ja">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 min-h-screen flex items-center justify-center">
+
+    <div class="max-w-xl w-full mx-auto p-8 bg-gray-800">
+        <!-- óra -->
+        <div class="mb-12 text-center">
+            <h1 class="text-2xl font-bold text-white mb-4">Óra</h1>
+            <p id="clock" class="text-3xl font-mono py-4 text-indigo-400">00:00:00</p>
+        </div>
+
+        <!-- stopper -->
+        <div class="mb-12 text-center">
+            <h2 class="text-2xl font-bold text-white mb-4">Stopper</h2>
+            <p id="stopwatch" class="text-3xl font-mono py-4 text-green-400">00:00:00</p>
+            <div class="flex flex-wrap justify-center space-x-4">
+                <button id="stopwatchStart" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition duration-200">Start</button>
+                <button id="stopwatchStop" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 transition duration-200">Stop</button>
+                <button id="stopwatchClear" class="bg-yellow-600 text-white px-6 py-2 rounded hover:bg-yellow-700 transition duration-200 mt-2 sm:mt-0">Clear</button>
+            </div>
+        </div>
+
+        <!-- visszaszámláló -->
+        <div class="text-center">
+            <h2 class="text-4xl font-bold text-white mb-4">Visszaszámláló</h2>
+            <p id="countdown" class="text-3xl font-mono py-4 text-red-400">00:00:00:00:00:00</p>
+            <div class="flex justify-center mt-6">
+                <input type="datetime-local" id="ctdnDate" class="px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+        </div>
+    </div>
+
+    <script defer>
+        // óra
+        const clockEl = document.getElementById("clock");
+        setInterval(()=>{
+            const date = new Date();
+            clockEl.innerHTML = `${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}:${date.getSeconds().toString().padStart(2,'0')}`;
+        },1000)
+
+        // stopper
+        const stopwatchEl = document.getElementById("stopwatch");
+        const stwcStartEl = document.getElementById("stopwatchStart");
+        const stwcStopEl = document.getElementById("stopwatchStop");
+        const stwcClearEl = document.getElementById("stopwatchClear");
+
+        let stwcInterval = null;
+        let stwcTime = 0;
+
+        // start
+        stwcStartEl.addEventListener("click", (e)=>{
+            if(!stwcInterval) {
+                stwcInterval = setInterval(() => {
+                    stwcTime++;
+                    stopwatchEl.innerHTML = displayFormatted(stwcTime, 1);
+                }, 1000)
+            }
+        })
+
+        // stop
+        stwcStopEl.addEventListener("click", (e)=>{
+            if(stwcInterval) {
+                clearInterval(stwcInterval);
+                stwcInterval = null;
+            }
+        })
+
+        // clear
+        stwcClearEl.addEventListener("click", (e)=>{
+            if(stwcInterval) {
+                clearInterval(stwcInterval);
+                stwcInterval = null;
+            }
+
+            stwcTime = 0;
+            stopwatchEl.innerHTML = displayFormatted(stwcTime, 1);
+        })
+
+        // countdown
+        const countdownEl = document.getElementById("countdown");
+        const ctdnDateEl = document.getElementById("ctdnDate");
+
+        let ctdnInterval = null;
+
+        ctdnDateEl.addEventListener("input", (e)=>{
+            if(ctdnInterval) {
+                clearInterval(ctdnInterval);
+                ctdnInterval = null;
+            }
+
+            let selectedDate = new Date(ctdnDateEl.value).getTime();
+            let now = new Date().getTime();
+
+            if (selectedDate > now) {
+                ctdnInterval = setInterval(() => {
+                    let now = new Date().getTime();
+                    let diff = selectedDate - now;
+
+                    if (diff <= 0) {
+                        clearInterval(ctdnInterval);
+                        ctdnInterval = null;
+                        countdownEl.innerHTML = "00:00:00:00:00:00";
+                    } else {
+                        countdownEl.innerHTML = displayFormatted(diff / 1000, 2);
+                    }
+                }, 1000);
+            } else {
+                countdownEl.innerHTML = "00:00:00:00:00:00";
+            }
+        })
+
+        // function ami megkönnyíti az életem de attól még én írtam 2 óra alvás után
+        function displayFormatted(seconds, mode = 1) {
+            const secondsInMinute = 60;
+            const secondsInHour = 3600;
+            const secondsInDay = 86400;
+            const secondsInWeek = 604800;
+            const secondsInMonth = 2629746;
+
+            let fMonths,fWeeks,fDays,fHours,fMinutes,fSeconds = 0;
+
+            switch (mode) {
+                case 1:
+                    fHours = Math.floor(seconds / 3600).toString().padStart(2, '0');
+                    fMinutes = Math.floor(seconds % 3600 / 60).toString().padStart(2, '0');
+                    fSeconds = Math.floor(seconds % 60).toString().padStart(2, '0');    
+                
+                    return `${fHours}:${fMinutes}:${fSeconds}`;
+                    break;
+                case 2:
+                    fMonths = Math.floor(seconds / secondsInMonth).toString().padStart(2, '0');
+                    fWeeks = Math.floor((seconds % secondsInMonth) / secondsInWeek).toString().padStart(2, '0');
+                    fDays = Math.floor((seconds % secondsInWeek) / secondsInDay).toString().padStart(2, '0');
+                    fHours = Math.floor((seconds % secondsInDay) / secondsInHour).toString().padStart(2, '0');
+                    fMinutes = Math.floor((seconds % secondsInHour) / secondsInMinute).toString().padStart(2, '0');
+                    fSeconds = Math.floor(seconds % secondsInMinute).toString().padStart(2, '0');
+                
+                    return `${fMonths}:${fWeeks}:${fDays}:${fHours}:${fMinutes}:${fSeconds}`;
+                    break;
+                default:
+                    return displayFormatted(seconds, 1);
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>
